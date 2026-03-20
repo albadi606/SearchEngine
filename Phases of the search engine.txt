@@ -1,0 +1,4 @@
+Phase 1 (Week 1-2): Build the crawler. Start small — crawl just one domain (like Wikipedia). Store the raw HTML and extracted text in a database.
+Phase 2 (Week 2-3): Build the inverted index. Tokenize the text, remove stop words, stem the words, and create the index structure.
+Phase 3 (Week 3-4): Implement TF-IDF ranking. Now you can type a query and get ranked results.
+Phase 4 (Week 4-5): Build the Django frontend. Add features like pagination, query suggestions, and search filters.

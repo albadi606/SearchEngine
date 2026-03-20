@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}{{ query }} — SearchEngine{% endblock %}
+
+{% block extra_styles %}
+.results-header {
+    display: flex;
+    align-items: center;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    gap: 20px;
+    position: sticky;
+    top: 0;
+    background: rgba(250,250,250,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 10;
+}
+
+.results-header .search-form { max-width: 620px; }
+.results-header .search-box { height: 44px; border-radius: 22px; }
+.results-header .search-box.ac-open { border-radius: 16px 16px 0 0; }
+.results-header .autocomplete-dropdown { top: 44px; border-radius: 0 0 16px 16px; }
+
+.results-body {
+    max-width: 780px;
+    padding: 16px 24px 60px 200px;
+    animation: fadeIn 0.3s ease;
+}
+
+.results-info {
+    color: var(--text-hint);
+    font-size: 13px;
+    padding: 12px 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.results-info svg { width: 14px; height: 14px; fill: var(--text-hint); }
+
+/* ─── Did you mean ───────────────────────── */
+.did-you-mean {
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    background: #fef7e0;
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--warning);
+    font-size: 15px;
+}
+
+.did-you-mean-label { color: var(--text-secondary); }
+
+.did-you-mean a {
+    color: var(--accent);
+    font-size: 17px;
+    font-weight: 600;
+    font-style: italic;
+}
+
+.did-you-mean a:hover { text-decoration: underline; }
+
+/* ─── Result Card ────────────────────────── */
+.result-item {
+    margin-bottom: 8px;
+    padding: 18px 20px;
+    border-radius: var(--radius);
+    display: flex;
+    gap: 18px;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+}
+
+.result-item:hover {
+    background: var(--bg-card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.result-content { flex: 1; min-width: 0; }
+
+.result-thumb {
+    width: 120px;
+    height: 84px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--border);
+    margin-top: 2px;
+}
+
+.result-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s;
+}
+
+.result-item:hover .result-thumb img { transform: scale(1.05); }
+
+/* URL line */
+.result-url {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.result-favicon {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: var(--accent-light);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.result-domain {
+    font-weight: 500;
+    color: var(--text);
+}
+
+.result-path {
+    color: var(--text-hint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Title */
+.result-title {
+    font-size: 19px;
+    line-height: 1.35;
+    margin: 3px 0 6px;
+    font-weight: 500;
+}
+
+.result-title a {
+    color: var(--text);
+    transition: color 0.15s;
+}
+
+.result-title a:hover { color: var(--accent); text-decoration: none; }
+.result-title a:visited { color: #6b21a8; }
+
+/* Snippet */
+.result-snippet {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Meta row */
+.result-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.meta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: -0.1px;
+}
+
+.meta-score { background: var(--accent-light); color: var(--accent); font-family: var(--mono); }
+
+.meta-source-wiki { background: #f0f9ff; color: #0369a1; }
+.meta-source-mdn { background: #fdf4ff; color: #a21caf; }
+.meta-source-python { background: #fefce8; color: #a16207; }
+.meta-source-oman { background: var(--success-bg); color: var(--success); }
+.meta-source-default { background: #f5f5f5; color: #737373; }
+
+.meta-words {
+    font-size: 12px;
+    color: var(--text-hint);
+    font-family: var(--mono);
+}
+
+/* ─── Pagination ─────────────────────────── */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 32px 0 16px;
+}
+
+.pagination a, .pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    transition: all 0.15s;
+}
+
+.pagination a:hover { background: var(--accent-light); text-decoration: none; }
+.pagination .current {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(79,70,229,0.3);
+}
+
+/* ─── No results ─────────────────────────── */
+.no-results {
+    padding: 48px 0;
+    text-align: center;
+}
+
+.no-results-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.no-results-icon svg { width: 28px; height: 28px; fill: var(--accent); }
+
+.no-results h2 {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.no-results p { color: var(--text-secondary); font-size: 14px; }
+
+.no-results ul {
+    text-align: left;
+    display: inline-block;
+    padding-left: 20px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.no-results li { margin: 6px 0; }
+.no-results code {
+    font-family: var(--mono);
+    background: var(--accent-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--accent);
+}
+
+@media (max-width: 768px) {
+    .results-body { padding: 12px 16px; }
+    .results-header { flex-wrap: wrap; padding: 10px 16px; }
+    .result-thumb { display: none; }
+    .result-item { padding: 14px 0; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="results-header">
+    <a href="/" style="text-decoration:none;" class="logo-small">
+        <span class="logo">
+            <span class="logo-icon"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></span>
+        </span>
+    </a>
+    <form class="search-form" action="/search/" method="GET">
+        <div class="search-wrapper">
+            <div class="search-box">
+                <svg class="search-icon" viewBox="0 0 24 24">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+                <input type="text" name="q" class="search-input"
+                       value="{{ query }}" autocomplete="off">
+                <button type="button" class="clear-btn">&times;</button>
+            </div>
+            <div class="autocomplete-dropdown"></div>
+        </div>
+        <button type="submit" class="search-btn">Search</button>
+    </form>
+</div>
+
+<div class="results-body">
+    {% if error %}
+    <div class="no-results">
+        <div class="no-results-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+        <h2>Something went wrong</h2>
+        <p>{{ error }}</p>
+    </div>
+
+    {% elif results %}
+
+    {% if suggestion %}
+    <div class="did-you-mean">
+        <span class="did-you-mean-label">Did you mean: </span>
+        <a href="/search/?q={{ suggestion }}">{{ suggestion }}</a><span class="did-you-mean-label"> ?</span>
+    </div>
+    {% endif %}
+
+    <div class="results-info">
+        <svg viewBox="0 0 24 24"><path d="M11 7h2v2h-2V7zm0 4h2v6h-2v-6zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        About {{ total_results }} results ({{ search_time }}s) &middot; {{ total_docs }} indexed pages
+    </div>
+
+    {% for r in results %}
+    <div class="result-item">
+        <div class="result-content">
+            <div class="result-url">
+                <span class="result-favicon">{{ r.title|truncatechars:1|upper }}</span>
+                <span class="result-domain">{{ r.url|truncatechars:40 }}</span>
+            </div>
+            <h3 class="result-title">
+                <a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>
+            </h3>
+            <div class="result-snippet">{{ r.snippet }}</div>
+            <div class="result-meta">
+                <span class="meta-badge meta-score">{{ r.score }}</span>
+                {% if "wikipedia" in r.url %}
+                <span class="meta-badge meta-source-wiki">Wikipedia</span>
+                {% elif "mozilla" in r.url %}
+                <span class="meta-badge meta-source-mdn">MDN Docs</span>
+                {% elif "python" in r.url %}
+                <span class="meta-badge meta-source-python">Python</span>
+                {% elif "oman" in r.url or "muscat" in r.url %}
+                <span class="meta-badge meta-source-oman">Oman</span>
+                {% else %}
+                <span class="meta-badge meta-source-default">Web</span>
+                {% endif %}
+                <span class="meta-words">{{ r.word_count }} words</span>
+            </div>
+        </div>
+        {% if r.image_url %}
+        <div class="result-thumb">
+            <img src="{{ r.image_url }}" alt="{{ r.title }}" loading="lazy"
+                 onerror="this.parentElement.style.display='none'">
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if has_prev %}
+        <a href="/search/?q={{ query }}&page={{ prev_page }}">&larr; Prev</a>
+        {% endif %}
+        <span class="current">{{ current_page }}</span>
+        {% if has_next %}
+        <a href="/search/?q={{ query }}&page={{ next_page }}">Next &rarr;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+
+    {% if suggestion %}
+    <div class="did-you-mean" style="margin-top:24px;">
+        <span class="did-you-mean-label">Did you mean: </span>
+        <a href="/search/?q={{ suggestion }}">{{ suggestion }}</a><span class="did-you-mean-label"> ?</span>
+    </div>
+    {% endif %}
+
+    <div class="no-results">
+        <div class="no-results-icon">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </div>
+        <h2>No results found for "{{ query }}"</h2>
+        <p>Try adjusting your search</p>
+        <ul>
+            <li>Check your spelling</li>
+            <li>Try more general keywords</li>
+            <li>Crawl more pages: <code>python run_crawler.py --max-pages 500</code></li>
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

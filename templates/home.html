@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}SearchEngine — Built from Scratch{% endblock %}
+
+{% block extra_styles %}
+.home-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.home-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.home-main::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.home-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 640px;
+    width: 100%;
+}
+
+.home-logo { margin-bottom: 8px; }
+.home-logo .logo { font-size: 48px; }
+.home-logo .logo-icon { width: 48px; height: 48px; border-radius: 13px; margin-right: 14px; }
+.home-logo .logo-icon svg { width: 24px; height: 24px; }
+
+.home-tagline {
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin-bottom: 36px;
+    font-weight: 400;
+    letter-spacing: -0.2px;
+}
+
+/* Search area — wrapper gets high z-index so dropdown floats above buttons */
+.search-area {
+    width: 100%;
+    max-width: 620px;
+    position: relative;
+    z-index: 20;
+}
+
+/* Buttons sit below with lower z-index so dropdown covers them */
+.search-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Stats row */
+.home-stats-row {
+    display: flex;
+    gap: 32px;
+    margin-top: 28px;
+    color: var(--text-hint);
+    font-size: 13px;
+}
+
+.home-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.home-stat-num {
+    font-weight: 600;
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 14px;
+}
+
+/* Feature pills */
+.feature-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.pill {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: -0.1px;
+}
+
+.pill-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.pill-accent { background: var(--accent-light); color: var(--accent); }
+.pill-accent .pill-dot { background: var(--accent); }
+.pill-green { background: var(--success-bg); color: var(--success); }
+.pill-green .pill-dot { background: var(--success); }
+.pill-amber { background: var(--warning-bg); color: var(--warning); }
+.pill-amber .pill-dot { background: var(--warning); }
+.pill-red { background: var(--danger-bg); color: var(--danger); }
+.pill-red .pill-dot { background: var(--danger); }
+
+/* Recent searches */
+.recent-section {
+    margin-top: 36px;
+    text-align: center;
+    width: 100%;
+    display: none; /* hidden until JS populates it */
+}
+
+.recent-section.visible { display: block; }
+
+.recent-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-hint);
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.recent-label svg { width: 13px; height: 13px; fill: var(--text-hint); }
+
+.recent-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.recent-tag {
+    background: var(--bg-card);
+    color: var(--text);
+    padding: 7px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 400;
+    text-decoration: none;
+    border: 1.5px solid var(--border);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.recent-tag:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+    box-shadow: 0 2px 8px var(--accent-glow);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.recent-tag svg { width: 12px; height: 12px; fill: currentColor; opacity: 0.5; }
+
+.clear-recent {
+    font-size: 11px;
+    color: var(--text-hint);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: var(--font);
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.15s;
+    margin-top: 8px;
+}
+
+.clear-recent:hover { color: var(--danger); background: var(--danger-bg); }
+
+/* Bottom links */
+.home-bottom-links {
+    margin-top: 28px;
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+}
+
+.home-bottom-links a { color: var(--text-hint); transition: color 0.15s; }
+.home-bottom-links a:hover { color: var(--accent); text-decoration: none; }
+
+@media (max-width: 600px) {
+    .home-logo .logo { font-size: 32px; }
+    .home-stats-row { flex-direction: column; gap: 8px; align-items: center; }
+    .home-main { padding: 0 16px; }
+}
+{% endblock %}
+
+{% block content %}
+<div class="home-wrapper">
+    <div class="home-main">
+        <div class="home-content">
+            <div class="home-logo animate-up">
+                <span class="logo">
+                    <span class="logo-icon"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></span>
+                    <span class="logo-text">SearchEngine</span>
+                </span>
+            </div>
+
+            <div class="home-tagline animate-up delay-1">Multi-source search engine built from scratch in Python</div>
+
+            <!-- Search area: high z-index so dropdown overlays everything below -->
+            <div class="search-area animate-up delay-2">
+                <form class="search-form" action="/search/" method="GET" id="home-search-form">
+                    <div class="search-wrapper">
+                        <div class="search-box">
+                            <svg class="search-icon" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                            <input type="text" name="q" class="search-input"
+                                   placeholder="Search across {{ total_docs }} indexed pages..."
+                                   autofocus autocomplete="off">
+                            <button type="button" class="clear-btn">&times;</button>
+                        </div>
+                        <div class="autocomplete-dropdown"></div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="search-actions animate-up delay-2">
+                <button class="search-btn" onclick="document.getElementById('home-search-form').submit()">Search</button>
+                <a href="/stats/" class="search-btn search-btn-outline" style="display:inline-flex;align-items:center;text-decoration:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="margin-right:6px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+                    Statistics
+                </a>
+            </div>
+
+            <div class="home-stats-row animate-up delay-3">
+                <div class="home-stat">
+                    <span class="home-stat-num">{{ total_docs }}</span> pages indexed
+                </div>
+                <div class="home-stat">
+                    <span class="home-stat-num">{{ unique_terms }}</span> unique terms
+                </div>
+                <div class="home-stat">
+                    <span class="home-stat-num">11</span> verified sources
+                </div>
+            </div>
+
+            <div class="feature-pills animate-up delay-3">
+                <span class="pill pill-accent"><span class="pill-dot"></span>TF-IDF ranking</span>
+                <span class="pill pill-green"><span class="pill-dot"></span>Autocomplete</span>
+                <span class="pill pill-amber"><span class="pill-dot"></span>Spell correction</span>
+                <span class="pill pill-red"><span class="pill-dot"></span>SimHash dedup</span>
+            </div>
+
+            <!-- Recent Searches (populated by JavaScript from localStorage) -->
+            <div class="recent-section animate-up delay-4" id="recent-section">
+                <div class="recent-label">
+                    <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                    Recent searches
+                </div>
+                <div class="recent-tags" id="recent-tags"></div>
+                <button class="clear-recent" id="clear-recent-btn" onclick="clearRecentSearches()">Clear history</button>
+            </div>
+
+            <div class="home-bottom-links animate-up delay-4">
+                <a href="https://github.com/albadi606">My GitHub page</a>
+                <a href="/stats/">Index stats</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Built from scratch by <strong>Mohammed Al-Badi</strong> &nbsp;&middot;&nbsp; Crawl &rarr; Index &rarr; Rank &rarr; Search
+    </div>
+</div>
+
+<script>
+// ─── Recent Searches (localStorage) ────────────────────────
+function getRecentSearches() {
+    try {
+        var data = localStorage.getItem('searchengine_recent');
+        return data ? JSON.parse(data) : [];
+    } catch(e) { return []; }
+}
+
+function renderRecentSearches() {
+    var searches = getRecentSearches();
+    var section = document.getElementById('recent-section');
+    var container = document.getElementById('recent-tags');
+
+    if (!searches.length || !section || !container) {
+        if (section) section.classList.remove('visible');
+        return;
+    }
+
+    var html = '';
+    searches.forEach(function(term) {
+        html += '<a href="/search/?q=' + encodeURIComponent(term) + '" class="recent-tag">'
+            + '<svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>'
+            + term + '</a>';
+    });
+
+    container.innerHTML = html;
+    section.classList.add('visible');
+}
+
+function clearRecentSearches() {
+    localStorage.removeItem('searchengine_recent');
+    var section = document.getElementById('recent-section');
+    if (section) section.classList.remove('visible');
+}
+
+// Render on page load
+renderRecentSearches();
+</script>
+{% endblock %}
